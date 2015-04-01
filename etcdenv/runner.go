@@ -42,7 +42,14 @@ func (r *Runner) Start(envVariables map[string]string) error {
 	r.cmd.Stderr = os.Stderr
 	r.cmd.Stdin = os.Stdin
 
-	go r.cmd.Run()
+	go func() {
+		err := r.cmd.Run()
+		if r.cmd.Process == nil {
+			fmt.Fprintf(os.Stderr, "etcdenv: %s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(r.cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus())
+	}()
 
 	return nil
 }
